@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Button } from "../ui/button";
+import { SignOutButton } from "@clerk/nextjs";
 
 // Dashboard header component
 interface DashboardHeaderProps {
@@ -146,6 +147,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Button variant="ghost" onClick={toggleTheme}>
                 {theme === "dark" ? "Dark Mode" : "Light Mode"}
               </Button>
+              <SignOutButton redirectUrl="/sign-in">
+                <Button className="cursor-pointer" type="button">
+                  Sign Out
+                </Button>
+              </SignOutButton>
             </div>
           </SidebarFooter>
         </Sidebar>

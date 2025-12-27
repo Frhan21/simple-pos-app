@@ -10,10 +10,15 @@ import { Button } from "@/components/ui/button";
 import { PRODUCTS } from "@/data/mock";
 import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
 import { ProductCatalogCard } from "@/components/shared/product/ProductCatalogCard";
+import Head from "next/head";
 
 const ProductsPage: NextPageWithLayout = () => {
   return (
     <>
+      <Head>
+        <title>Products - Simple POS</title>
+        <meta name="description" content="Manage your products" />
+      </Head>
       <DashboardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">

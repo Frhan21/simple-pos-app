@@ -14,6 +14,7 @@ import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import type { NextPageWithLayout } from "../_app";
 import { Button } from "@/components/ui/button";
+import Head from "next/head";
 
 const DashboardPage: NextPageWithLayout = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,7 +25,9 @@ const DashboardPage: NextPageWithLayout = () => {
     setSelectedCategory(categoryId);
   };
 
-  const handleAddToCart = (productId: string) => {};
+  const handleAddToCart = (productId: string) => {
+    setOrderSheetOpen(true);
+  };
 
   const filteredProducts = useMemo(() => {
     return PRODUCTS.filter((product) => {
@@ -41,6 +44,10 @@ const DashboardPage: NextPageWithLayout = () => {
 
   return (
     <>
+    <Head>
+        <title>Dashboard - Simple POS</title>
+        <meta name="description" content="Dashboard for the Simple POS system" />
+      </Head>
       <DashboardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
