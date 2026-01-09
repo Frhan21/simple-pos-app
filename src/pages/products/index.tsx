@@ -5,14 +5,122 @@ import {
   DashboardTitle,
 } from "@/components/layouts/DashboardLayout";
 import type { NextPageWithLayout } from "../_app";
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { Button } from "@/components/ui/button";
-import { PRODUCTS } from "@/data/mock";
 import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
 import { ProductCatalogCard } from "@/components/shared/product/ProductCatalogCard";
 import Head from "next/head";
+import { api } from "@/utils/api";
+import {
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ProductForm } from "@/components/shared/product/ProductForm";
+import { useForm } from "react-hook-form";
+import { Form } from "@/components/ui/form";
+import { productFormSchema, type ProductFormSchema } from "@/forms/product";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const ProductsPage: NextPageWithLayout = () => {
+  const [productFormOpen, setProductFormOpen] = useState(false);
+  const [editFormOpen, setEditFormOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<string | null>(null);
+  const [createImageUrl, setCreateImageUrl] = useState<string | null>(null);
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
+
+  const apiUtils = api.useUtils();
+
+  const { data: products, isLoading: productLoading } =
+    api.product.getProducts.useQuery();
+
+  const { mutate: createProduct } = api.product.createProduct.useMutation({
+    onSuccess: async () => {
+      await apiUtils.product.getProducts.invalidate();
+      alert("Product has been created");
+      setProductFormOpen(false);
+      setCreateImageUrl(null);
+      creatProductForm.reset();
+    },
+  });
+
+  const { mutate: deleteProduct } = api.product.deleteProduct.useMutation({
+    onSuccess: async () => {
+      await apiUtils.product.getProducts.invalidate();
+      alert("Product has been deleted");
+    },
+  });
+
+  const { mutate: editProduct } = api.product.editProduct.useMutation({
+    onSuccess: async () => {
+      await apiUtils.product.getProducts.invalidate();
+      alert("Product has been updated");
+      setEditFormOpen(false);
+      setEditImageUrl(null);
+      setProductToEdit(null);
+      editProductForm.reset();
+    },
+  });
+
+  const creatProductForm = useForm<ProductFormSchema>({
+    resolver: zodResolver(productFormSchema),
+  });
+
+  const editProductForm = useForm<ProductFormSchema>({
+    resolver: zodResolver(productFormSchema),
+  });
+
+  const handleDeletProduct = (productID: string) => {
+    if (!productID) return;
+    deleteProduct({ id: productID });
+  };
+
+  const handleEditProduct = (product: {
+    id: string;
+    name: string;
+    price: number;
+    categoryId: string;
+  }) => {
+    setEditFormOpen(true);
+    setProductToEdit(product.id);
+    setEditImageUrl(null);
+
+    editProductForm.reset({
+      name: product.name, 
+      price: product.price,
+      categoryId: product.categoryId
+      
+    });
+  };
+
+  const handleSubmitProduct = (values: ProductFormSchema) => {
+    if (!createImageUrl) {
+      alert("Please upload an image first.");
+      return;
+    }
+    createProduct({
+      name: values.name,
+      price: values.price,
+      categoryId: values.categoryId,
+      imageUrl: createImageUrl,
+    });
+  };
+
+  const handleSubmitEditProduct = (values: ProductFormSchema) => {
+    if (!productToEdit) return;
+    editProduct({
+      id: productToEdit,
+      name: values.name,
+      price: values.price,
+      categoryId: values.categoryId,
+      imageUrl: editImageUrl ?? undefined,
+    });
+  };
+
   return (
     <>
       <Head>
@@ -27,24 +135,81 @@ const ProductsPage: NextPageWithLayout = () => {
               View, add, edit, and delete products in your inventory.
             </DashboardDescription>
           </div>
+          <AlertDialog open={productFormOpen} onOpenChange={setProductFormOpen}>
+            <AlertDialogTrigger asChild>
+              <Button>Add New Product</Button>
+            </AlertDialogTrigger>
 
-          <Button>Add New Product</Button>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Add New Product</AlertDialogTitle>
+              </AlertDialogHeader>
+              <Form {...creatProductForm}>
+                <ProductForm
+                  onSubmit={handleSubmitProduct}
+                  onChangeImageUrl={(imageUrl) => {
+                    setCreateImageUrl(imageUrl);
+                  }}
+                />
+              </Form>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  onClick={creatProductForm.handleSubmit(handleSubmitProduct)}
+                >
+                  Create product
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </DashboardHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {PRODUCTS.map((product) => (
-          <ProductCatalogCard
-            key={product.id}
-            name={product.name}
-            price={product.price}
-            image={product.image ?? ""}
-            category={product.category}
-            onEdit={() => void 0}
-            onDelete={() => void 0}
-          />
-        ))}
+        {products?.map((product) => {
+          return (
+            <ProductCatalogCard
+              key={product.id}
+              name={product.name}
+              price={product.price}
+              image={product.imageUrl ?? ""}
+              category={product.category?.name ?? ""}
+              onDelete={() => handleDeletProduct(product.id)}
+              onEdit={() => handleEditProduct({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                categoryId: product.category.id,
+              })}
+            />
+          );
+        })}
       </div>
+
+      <AlertDialog open={editFormOpen} onOpenChange={setEditFormOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Edit Product</AlertDialogTitle>
+          </AlertDialogHeader>
+          <Form {...editProductForm}>
+            <ProductForm
+              onSubmit={handleSubmitEditProduct}
+              onChangeImageUrl={(imageUrl) => {
+                setEditImageUrl(imageUrl);
+              }}
+            />
+          </Form>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              onClick={editProductForm.handleSubmit(handleSubmitEditProduct)}
+            >
+              Edit Product
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

@@ -48,7 +48,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     resolver: zodResolver(categoryFormSchema),
   });
 
-  const { data: categories, isLoading: categoriesIsLoading } =
+  const { data: categories} =
     api.category.getCategories.useQuery();
 
   const { mutate: createCategory } = api.category.createCategory.useMutation({
