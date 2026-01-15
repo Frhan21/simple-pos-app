@@ -13,6 +13,7 @@ type addToCartItem = Omit<CartItem, "quantity">;
 interface CartState {
   items: CartItem[]; // Array of product IDs
   addToCart: (newItem: addToCartItem) => void;
+  clearCart: () => void;
 }
 
 export const useCartStore = create<CartState>()((set) => ({
@@ -35,14 +36,23 @@ export const useCartStore = create<CartState>()((set) => ({
         });
       } else {
         const itemsUpdate = duplicateItems[existingItemIndex];
-        if (!itemsUpdate) return {
-            ...state, 
-        };
+        if (!itemsUpdate)
+          return {
+            ...state,
+          };
         itemsUpdate.quantity += 1;
       }
       return {
         ...state,
         items: duplicateItems,
+      };
+    });
+  },
+  clearCart: () => {
+    set((currentState) => {
+      return {
+        ...currentState,
+        items: [],
       };
     });
   },
