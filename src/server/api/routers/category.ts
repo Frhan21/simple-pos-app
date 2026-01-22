@@ -12,6 +12,11 @@ export const categoryRouter = createTRPCRouter({
         name: true,
         createdAt: true,
         productCount: true,
+        _count: {
+          select: {
+            products: true,
+          },
+        },
       },
     });
     return categories;
@@ -58,23 +63,25 @@ export const categoryRouter = createTRPCRouter({
       });
     }),
 
-    editCategory: protectedProcedure.input(
+  editCategory: protectedProcedure
+    .input(
       z.object({
-        id: z.string(), 
+        id: z.string(),
         name: z
           .string()
           .min(3, "Name must be at least 3 characters")
           .max(255, "Name must be at most 255 characters"),
-      })
-    ).mutation(async ({ctx, input}) => {
-      const {db} = ctx;
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
       await db.category.update({
         where: {
-          id: input.id
-        }, 
+          id: input.id,
+        },
         data: {
-          name: input.name
-        }
-      }) 
-    })
+          name: input.name,
+        },
+      });
+    }),
 });

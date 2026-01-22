@@ -1,15 +1,16 @@
 import { Button } from "../ui/button";
 
-import { PRODUCTS } from "@/data/mock";
+import { useCartStore } from "@/store/cart";
+import { api } from "@/utils/api";
 import { toRupiah } from "@/utils/toRupiah";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogFooter,
+  AlertDialogFooter
 } from "../ui/alert-dialog";
 import { Separator } from "../ui/separator";
 import {
@@ -21,8 +22,6 @@ import {
   SheetTitle,
 } from "../ui/sheet";
 import { PaymentQRCode } from "./PaymentQrCode";
-import { useCartStore } from "@/store/cart";
-import { api } from "@/utils/api";
 
 type OrderItemProps = {
   id: string;
@@ -97,14 +96,14 @@ export const CreateOrderSheet = ({
   const { mutate: createOrder, data: createOrderResponse } =
     api.order.createOrder.useMutation({
       onSuccess: () => {
-        alert("Order created successfully!");
+        toast("Order created successfully!");
         setPaymentDialogOpen(true);
       },
     });
 
   const { mutate: simluationPayment } = api.order.simulatePayment.useMutation({
     onSuccess: () => {
-      alert("Simulated payment");
+      toast("Simulated payment");
     },
   });
 

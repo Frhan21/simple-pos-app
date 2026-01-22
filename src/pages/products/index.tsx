@@ -4,27 +4,27 @@ import {
   DashboardLayout,
   DashboardTitle,
 } from "@/components/layouts/DashboardLayout";
-import type { NextPageWithLayout } from "../_app";
-import { useState, type ReactElement } from "react";
-import { Button } from "@/components/ui/button";
-import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
 import { ProductCatalogCard } from "@/components/shared/product/ProductCatalogCard";
-import Head from "next/head";
-import { api } from "@/utils/api";
+import { ProductForm } from "@/components/shared/product/ProductForm";
 import {
-  AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ProductForm } from "@/components/shared/product/ProductForm";
-import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { productFormSchema, type ProductFormSchema } from "@/forms/product";
+import { api } from "@/utils/api";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Head from "next/head";
+import { useState, type ReactElement } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import type { NextPageWithLayout } from "../_app";
 
 const ProductsPage: NextPageWithLayout = () => {
   const [productFormOpen, setProductFormOpen] = useState(false);
@@ -36,12 +36,12 @@ const ProductsPage: NextPageWithLayout = () => {
   const apiUtils = api.useUtils();
 
   const { data: products, isLoading: productLoading } =
-    api.product.getProducts.useQuery();
+    api.product.getAllProducts.useQuery();
 
   const { mutate: createProduct } = api.product.createProduct.useMutation({
     onSuccess: async () => {
       await apiUtils.product.getProducts.invalidate();
-      alert("Product has been created");
+      toast("Product has been created");
       setProductFormOpen(false);
       setCreateImageUrl(null);
       creatProductForm.reset();
@@ -50,15 +50,15 @@ const ProductsPage: NextPageWithLayout = () => {
 
   const { mutate: deleteProduct } = api.product.deleteProduct.useMutation({
     onSuccess: async () => {
-      await apiUtils.product.getProducts.invalidate();
-      alert("Product has been deleted");
+      await apiUtils.product.getAllProducts.invalidate();
+      toast("Product has been deleted");
     },
   });
 
   const { mutate: editProduct } = api.product.editProduct.useMutation({
     onSuccess: async () => {
       await apiUtils.product.getProducts.invalidate();
-      alert("Product has been updated");
+      toast("Product has been updated");
       setEditFormOpen(false);
       setEditImageUrl(null);
       setProductToEdit(null);
@@ -90,16 +90,15 @@ const ProductsPage: NextPageWithLayout = () => {
     setEditImageUrl(null);
 
     editProductForm.reset({
-      name: product.name, 
+      name: product.name,
       price: product.price,
-      categoryId: product.categoryId
-      
+      categoryId: product.categoryId,
     });
   };
 
   const handleSubmitProduct = (values: ProductFormSchema) => {
     if (!createImageUrl) {
-      alert("Please upload an image first.");
+      toast("Please upload an image first.");
       return;
     }
     createProduct({
@@ -175,12 +174,14 @@ const ProductsPage: NextPageWithLayout = () => {
               image={product.imageUrl ?? ""}
               category={product.category?.name ?? ""}
               onDelete={() => handleDeletProduct(product.id)}
-              onEdit={() => handleEditProduct({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                categoryId: product.category.id,
-              })}
+              onEdit={() =>
+                handleEditProduct({
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  categoryId: product.category.id,
+                })
+              }
             />
           );
         })}

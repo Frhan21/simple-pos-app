@@ -7,16 +7,15 @@ import {
 import { CategoryFilterCard } from "@/components/shared/category/CategoryFilterCard";
 import { CreateOrderSheet } from "@/components/shared/CreateOrderSheet";
 import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
-import { Input } from "@/components/ui/input";
-import { CATEGORIES, PRODUCTS } from "@/data/mock";
-import { Search, ShoppingCart } from "lucide-react";
-import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
-import type { NextPageWithLayout } from "../_app";
 import { Button } from "@/components/ui/button";
-import Head from "next/head";
-import { api } from "@/utils/api";
+import { Input } from "@/components/ui/input";
 import { useCartStore } from "@/store/cart";
+import { api } from "@/utils/api";
+import { Search, ShoppingCart } from "lucide-react";
+import Head from "next/head";
+import type { ReactElement } from "react";
+import { useState } from "react";
+import type { NextPageWithLayout } from "../_app";
 
 const DashboardPage: NextPageWithLayout = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,7 +24,14 @@ const DashboardPage: NextPageWithLayout = () => {
 
   const cartStore = useCartStore();
 
-  const { data: products } = api.product.getProducts.useQuery();
+  const { data: products } = api.product.getProducts.useQuery({
+    categoryId: selectedCategory,
+  });
+  const { data: categories } = api.category.getCategories.useQuery();
+
+  const totalProduct = categories?.reduce((a, b) => {
+    return a + b._count.products;
+  }, 0);
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -43,19 +49,6 @@ const DashboardPage: NextPageWithLayout = () => {
     });
   };
 
-  const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
-      const categoryMatch =
-        selectedCategory === "all" || product.category === selectedCategory;
-
-      const searchMatch = product.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-
-      return categoryMatch && searchMatch;
-    });
-  }, [selectedCategory, searchQuery]);
-
   return (
     <>
       <Head>
@@ -68,7 +61,7 @@ const DashboardPage: NextPageWithLayout = () => {
       <DashboardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <DashboardTitle>Dashboard {cartStore.items.length}</DashboardTitle>
+            <DashboardTitle>Dashboard</DashboardTitle>
             <DashboardDescription>
               Welcome to your Simple POS system dashboard.
             </DashboardDescription>
@@ -86,6 +79,7 @@ const DashboardPage: NextPageWithLayout = () => {
 
       <div className="space-y-6">
         <div className="relative">
+          {/* Gunakan debouncing atau throttling */}
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder="Search products..."
@@ -96,13 +90,20 @@ const DashboardPage: NextPageWithLayout = () => {
         </div>
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
-          {CATEGORIES.map((category) => (
+          <CategoryFilterCard
+            key="all"
+            name="All"
+            isSelected={selectedCategory === "all"}
+            onClick={() => handleCategoryClick("all")}
+            productCount={totalProduct ?? 0}
+          />
+          {categories?.map((cat) => (
             <CategoryFilterCard
-              key={category.id}
-              name={category.name}
-              productCount={category.count}
-              isSelected={selectedCategory === category.id}
-              onClick={() => handleCategoryClick(category.id)}
+              key={cat.id}
+              name={cat.name}
+              isSelected={cat.id === selectedCategory}
+              onClick={() => handleCategoryClick(cat.id)}
+              productCount={cat._count.products}
             />
           ))}
         </div>

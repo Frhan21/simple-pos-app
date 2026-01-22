@@ -21,15 +21,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { CATEGORIES, type Category } from "@/data/mock";
 import { categoryFormSchema, type CategoryFormSchema } from "@/forms/category";
+import { api } from "@/utils/api";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Head from "next/head";
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import type { NextPageWithLayout } from "../_app";
-import { api } from "@/utils/api";
-import Head from "next/head";
 
 const CategoriesPage: NextPageWithLayout = () => {
   const apiUtils = api.useUtils();
@@ -55,7 +55,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
 
-      alert("Category created successfully");
+      toast("Category created successfully");
       setCreateCategoryDialogOpen(false);
       createCategoryForm.reset();
     },
@@ -65,7 +65,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
 
-      alert("Category deleted successfully");
+      toast("Category deleted successfully");
       setCategoryToDelete(null);
     },
   });
@@ -74,7 +74,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
 
-      alert("Category edited successfully");
+      toast("Category edited successfully");
       setEditCategoryDialogOpen(false);
       editCategoryForm.reset();
       setCategoryToEdit(null);
@@ -171,7 +171,7 @@ const CategoriesPage: NextPageWithLayout = () => {
             <CategoryCatalogCard
               key={category.id}
               name={category.name}
-              productCount={category.productCount ?? 0}
+              productCount={category._count.products ?? 0}
               onEdit={() => handleClickEditCategory(category)}
               onDelete={() => handleClickDeleteCategory(category.id)}
             />

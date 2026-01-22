@@ -10,16 +10,17 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectItem,
 } from "@/components/ui/select";
 import { type ProductFormSchema } from "@/forms/product";
 import { uploadFiletoSignedUrl } from "@/lib/supabase";
 import { Bucket } from "@/server/bucket";
 import { api } from "@/utils/api";
-import { useState, type ChangeEvent } from "react";
+import { type ChangeEvent } from "react";
 import { useFormContext } from "react-hook-form";
+import { toast } from "sonner";
 
 type ProductFormProps = {
   onSubmit: (values: ProductFormSchema) => void;
@@ -48,7 +49,7 @@ export const ProductForm = ({ onSubmit, onChangeImageUrl }: ProductFormProps) =>
           token: token
         })
         onChangeImageUrl(imageUrl!)
-        alert("Image uploaded successfully: " + imageUrl);
+        toast("Image uploaded successfully: " + imageUrl);
     }
   }
 
