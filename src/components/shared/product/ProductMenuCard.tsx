@@ -1,7 +1,7 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import Image from "next/image";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toRupiah } from "@/utils/toRupiah";
 
 interface ProductMenuCardProps {
@@ -18,47 +18,32 @@ export const ProductMenuCard: React.FC<ProductMenuCardProps> = ({
   imageUrl,
   productId,
   onAddToCart,
-}) => {
-  // Format price in Rupiah
-  // const formatPrice = (price: number) => {
-  //   return new Intl.NumberFormat("id-ID", {
-  //     style: "currency",
-  //     currency: "IDR",
-  //     minimumFractionDigits: 0,
-  //   }).format(price);
-  // };
-
-  return (
-    <div className="hover:bg-accent/10 relative flex flex-col rounded-lg border p-4 transition-colors">
-      {imageUrl && (
-        <div className="relative mb-3 h-32 w-full overflow-hidden rounded-md">
-          <Image
-            unoptimized
-            fill
-            src={imageUrl}
-            alt={name}
-            className="h-full w-full object-cover"
-          />
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <h3 className="line-clamp-2 font-medium">{name}</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {toRupiah(price)}
-          </p>
-        </div>
-
-        <Button
-          size="icon"
-          // variant="secondary"
-          onClick={() => onAddToCart(productId)}
-          aria-label={`Add ${name} to cart`}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
+}) => (
+  <article className="group bg-card ring-border hover:bg-muted/40 flex min-w-0 flex-col p-2 ring-1 transition-colors">
+    <div className="bg-muted relative aspect-[4/3] w-full overflow-hidden">
+      <Image
+        unoptimized
+        fill
+        src={imageUrl}
+        alt={name}
+        className="object-cover transition-transform duration-300 group-hover:scale-[1.025]"
+      />
     </div>
-  );
-};
+    <div className="flex flex-1 items-end justify-between gap-3 p-3 pb-2">
+      <div className="min-w-0">
+        <h3 className="truncate font-semibold tracking-tight">{name}</h3>
+        <p className="text-muted-foreground mt-1 text-sm font-medium tabular-nums">
+          {toRupiah(price)}
+        </p>
+      </div>
+      <Button
+        size="icon"
+        onClick={() => onAddToCart(productId)}
+        aria-label={`Add ${name} to cart`}
+        className="size-11 shrink-0 rounded-sm"
+      >
+        <Plus className="size-4" />
+      </Button>
+    </div>
+  </article>
+);

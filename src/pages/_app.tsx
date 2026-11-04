@@ -5,11 +5,12 @@ import { api } from "@/utils/api";
 import { ClerkProvider } from "@clerk/nextjs";
 import type { NextPage } from "next";
 import { type AppProps } from "next/app";
-import { Outfit } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import type { ReactElement, ReactNode } from "react";
 
-const outfit = Outfit({
+const schibsted = Schibsted_Grotesk({
   subsets: ["latin"],
+  variable: "--font-schibsted",
 });
 
 export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
@@ -26,7 +27,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   return (
     <ClerkProvider>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className={`${outfit.className}`}>
+        <div className={`${schibsted.className} ${schibsted.variable}`}>
           {getLayout(<Component {...pageProps} />)}
           <Toaster position="top-right" />
         </div>

@@ -7,23 +7,11 @@ const isProtectedRoute = createRouteMatcher([
   "/products(.*)",
   "/orders(.*)",
   "/sales(.*)",
-  "/",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   const { pathname } = req.nextUrl;
-
-  if (pathname === "/") {
-    if (userId) {
-      const dashboardUrl = new URL("/dashboard", req.url);
-      return NextResponse.redirect(dashboardUrl);
-    }
-
-    const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", "/dashboard");
-    return NextResponse.redirect(signInUrl);
-  }
 
   if (!userId && isProtectedRoute(req)) {
     const signInUrl = new URL("/sign-in", req.url);

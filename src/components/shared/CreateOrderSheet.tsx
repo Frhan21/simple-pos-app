@@ -225,7 +225,7 @@ export const CreateOrderSheet = ({
 
             {paymentInfoLoading ? (
               <div className="flex flex-col items-center justify-center gap-2">
-                <div className="border-primary h-10 w-10 animate-spin rounded-full border-t-2 border-b-2 border-l-2" />
+                <div className="border-muted border-t-primary size-10 animate-spin rounded-full border-2" />
 
                 <p>Loading...</p>
               </div>

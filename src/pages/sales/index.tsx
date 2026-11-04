@@ -58,38 +58,36 @@ const SalesPage: NextPageWithLayout = () => {
         <meta name="description" content="Manage your sales and orders" />
       </Head>
       <DashboardHeader>
-        <DashboardTitle>Sales Dashboard {filteredOrder}</DashboardTitle>
+        <DashboardTitle>Sales</DashboardTitle>
         <DashboardDescription>
-          Track your sales performance and view analytics.
+          Revenue and order status from the same counter workflow.
         </DashboardDescription>
       </DashboardHeader>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border p-4 shadow-sm">
-          <h3 className="text-lg font-medium">Total Revenue</h3>
-          <p className="mt-2 text-3xl font-bold">
+      <div className="bg-card ring-border mb-6 grid ring-1 sm:grid-cols-3">
+        <div className="p-5 sm:border-r">
+          <h2 className="text-muted-foreground text-sm">Total revenue</h2>
+          <p className="mt-3 text-2xl font-bold tabular-nums">
             {toRupiah(salesReport?.totalRevenue ?? 0)}
           </p>
         </div>
-
-        <div className="rounded-lg border p-4 shadow-sm">
-          <h3 className="text-lg font-medium">Ongoing Orders</h3>
-          <p className="mt-2 text-3xl font-bold">
+        <div className="border-t p-5 sm:border-t-0 sm:border-r">
+          <h2 className="text-muted-foreground text-sm">Ongoing orders</h2>
+          <p className="mt-3 text-2xl font-semibold tabular-nums">
             {salesReport?.totalOnGoingOrder ?? 0}
           </p>
         </div>
-
-        <div className="rounded-lg border p-4 shadow-sm">
-          <h3 className="text-lg font-medium">Completed Orders</h3>
-          <p className="mt-2 text-3xl font-bold">
+        <div className="border-t p-5 sm:border-t-0">
+          <h2 className="text-muted-foreground text-sm">Completed orders</h2>
+          <p className="mt-3 text-2xl font-semibold tabular-nums">
             {salesReport?.totalCompleteOrder ?? 0}
           </p>
         </div>
       </div>
 
-      <div className="rounded-lg border p-6">
-        <div className="flex justify-between">
-          <h3 className="mb-4 text-lg font-medium">Orders</h3>
+      <div className="bg-card ring-border p-4 ring-1 sm:p-6">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-bold">Orders</h2>
           <Select defaultValue="ALL" onValueChange={handleFilterOrder}>
             <SelectTrigger>
               <SelectValue placeholder="Pilih filter...." />
@@ -106,7 +104,7 @@ const SalesPage: NextPageWithLayout = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {orders?.map((order) => (
             <OrderCard
               key={order.id}

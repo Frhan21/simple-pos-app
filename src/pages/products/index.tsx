@@ -5,6 +5,10 @@ import {
   DashboardTitle,
 } from "@/components/layouts/DashboardLayout";
 import { ProductCatalogCard } from "@/components/shared/product/ProductCatalogCard";
+import {
+  CatalogEmpty,
+  CatalogTable,
+} from "@/components/shared/catalog/CatalogTable";
 import { ProductForm } from "@/components/shared/product/ProductForm";
 import {
   AlertDialog,
@@ -137,16 +141,17 @@ const ProductsPage: NextPageWithLayout = () => {
         <meta name="description" content="Manage your products" />
       </Head>
       <DashboardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <DashboardTitle>Product Management</DashboardTitle>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <DashboardTitle>Products</DashboardTitle>
             <DashboardDescription>
-              View, add, edit, and delete products in your inventory.
+              Keep names, categories, prices, and product images ready for the
+              counter.
             </DashboardDescription>
           </div>
           <AlertDialog open={productFormOpen} onOpenChange={setProductFormOpen}>
             <AlertDialogTrigger asChild>
-              <Button>Add New Product</Button>
+              <Button className="h-11 rounded-sm">Add product</Button>
             </AlertDialogTrigger>
 
             <AlertDialogContent>
@@ -174,9 +179,14 @@ const ProductsPage: NextPageWithLayout = () => {
         </div>
       </DashboardHeader>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {products?.map((product) => {
-          return (
+      {productLoading ? (
+        <div
+          className="bg-muted h-72 animate-pulse"
+          aria-label="Loading products"
+        />
+      ) : products?.length ? (
+        <CatalogTable headers={["Product", "Category", "Price", "Actions"]}>
+          {products.map((product) => (
             <ProductCatalogCard
               key={product.id}
               name={product.name}
@@ -193,9 +203,14 @@ const ProductsPage: NextPageWithLayout = () => {
                 })
               }
             />
-          );
-        })}
-      </div>
+          ))}
+        </CatalogTable>
+      ) : (
+        <CatalogEmpty
+          title="No products yet"
+          description="Add the first product to make it available at the counter."
+        />
+      )}
 
       <AlertDialog open={editFormOpen} onOpenChange={setEditFormOpen}>
         <AlertDialogContent>

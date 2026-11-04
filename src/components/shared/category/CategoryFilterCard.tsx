@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 type CategoryFilterCardProps = {
   name: string;
   productCount: number;
@@ -10,18 +12,26 @@ export const CategoryFilterCard = ({
   productCount,
   isSelected,
   onClick,
-}: CategoryFilterCardProps) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`hover:bg-muted/50 flex min-w-[210px] flex-col items-center justify-center rounded-lg border p-4 text-center transition-colors ${
-        isSelected ? "border-primary bg-primary/10" : ""
-      }`}
+}: CategoryFilterCardProps) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={isSelected}
+    className={cn(
+      "flex h-11 shrink-0 items-center gap-2 rounded-sm px-4 text-sm font-semibold transition-colors focus-visible:ring-2",
+      isSelected
+        ? "bg-foreground text-background"
+        : "bg-card text-muted-foreground ring-border hover:bg-muted hover:text-foreground ring-1",
+    )}
+  >
+    <span>{name}</span>
+    <span
+      className={cn(
+        "tabular-nums",
+        isSelected ? "text-background/65" : "text-muted-foreground",
+      )}
     >
-      <div className="text-lg font-medium">{name}</div>
-      <div className="text-muted-foreground text-sm">
-        {productCount} Product{productCount === 1 ? "" : "s"}
-      </div>
-    </button>
-  );
-};
+      {productCount}
+    </span>
+  </button>
+);
