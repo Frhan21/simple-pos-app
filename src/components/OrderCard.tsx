@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { toRupiah } from "@/utils/toRupiah";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus } from "@/generated/prisma/enums";
 
 interface OrderCardProps {
   id: string;

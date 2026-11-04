@@ -5,7 +5,7 @@ import Image from "next/image";
 import { toRupiah } from "@/utils/toRupiah";
 
 interface ProductMenuCardProps {
-  productId: string; 
+  productId: string;
   name: string;
   price: number;
   imageUrl: string;
@@ -16,7 +16,7 @@ export const ProductMenuCard: React.FC<ProductMenuCardProps> = ({
   name,
   price,
   imageUrl,
-  productId, 
+  productId,
   onAddToCart,
 }) => {
   // Format price in Rupiah

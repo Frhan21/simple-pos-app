@@ -1,15 +1,11 @@
-import { FlatCompat } from "@eslint/eslintrc";
+import coreWebVitals from "eslint-config-next/core-web-vitals";
 import tseslint from "typescript-eslint";
-
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-});
 
 export default tseslint.config(
   {
-    ignores: [".next"],
+    ignores: [".next", "src/generated"],
   },
-  ...compat.extends("next/core-web-vitals"),
+  ...coreWebVitals,
   {
     files: ["**/*.ts", "**/*.tsx"],
     extends: [

@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Head from "next/head";
 import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
+import { type z } from "zod";
 import { toast } from "sonner";
 import type { NextPageWithLayout } from "../_app";
 
@@ -66,11 +67,20 @@ const ProductsPage: NextPageWithLayout = () => {
     },
   });
 
-  const creatProductForm = useForm<ProductFormSchema>({
+  // z.coerce: resolver input = unknown, output = number (Zod 4 + resolvers v7)
+  const creatProductForm = useForm<
+    z.input<typeof productFormSchema>,
+    unknown,
+    ProductFormSchema
+  >({
     resolver: zodResolver(productFormSchema),
   });
 
-  const editProductForm = useForm<ProductFormSchema>({
+  const editProductForm = useForm<
+    z.input<typeof productFormSchema>,
+    unknown,
+    ProductFormSchema
+  >({
     resolver: zodResolver(productFormSchema),
   });
 

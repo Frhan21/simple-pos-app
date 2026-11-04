@@ -24,34 +24,38 @@ import { toast } from "sonner";
 
 type ProductFormProps = {
   onSubmit: (values: ProductFormSchema) => void;
-  onChangeImageUrl:(imageUrl: string) => void; 
+  onChangeImageUrl: (imageUrl: string) => void;
 };
 
-export const ProductForm = ({ onSubmit, onChangeImageUrl }: ProductFormProps) => {
+export const ProductForm = ({
+  onSubmit,
+  onChangeImageUrl,
+}: ProductFormProps) => {
   const form = useFormContext<ProductFormSchema>();
 
   const { data: categories } = api.category.getCategories.useQuery();
 
-  const { mutateAsync: createImageSignURL } = api.product.createProductImageSignedUrl.useMutation();
+  const { mutateAsync: createImageSignURL } =
+    api.product.createProductImageSignedUrl.useMutation();
   const imageChangeHandler = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files; 
-    if (files && files?.length > 0 ) {
-        const file = files[0]; 
+    const files = e.target.files;
+    if (files && files?.length > 0) {
+      const file = files[0];
 
-        if(!file) return;
+      if (!file) return;
 
-        const {path, token} = await createImageSignURL(); 
+      const { path, token } = await createImageSignURL();
 
-        const imageUrl = await uploadFiletoSignedUrl({
-          bucket: Bucket.ProductImages, 
-          file: file, 
-          path: path, 
-          token: token
-        })
-        onChangeImageUrl(imageUrl!)
-        toast("Image uploaded successfully: " + imageUrl);
+      const imageUrl = await uploadFiletoSignedUrl({
+        bucket: Bucket.ProductImages,
+        file: file,
+        path: path,
+        token: token,
+      });
+      onChangeImageUrl(imageUrl!);
+      toast("Image uploaded successfully: " + imageUrl);
     }
-  }
+  };
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -117,7 +121,7 @@ export const ProductForm = ({ onSubmit, onChangeImageUrl }: ProductFormProps) =>
 
       <div className="space-y-1">
         <Label>Upload Product Image</Label>
-        <Input type="file" accept="image/*" onChange={imageChangeHandler}/>
+        <Input type="file" accept="image/*" onChange={imageChangeHandler} />
       </div>
     </form>
   );

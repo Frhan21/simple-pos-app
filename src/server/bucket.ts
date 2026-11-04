@@ -1,3 +1,3 @@
 export enum Bucket {
-    ProductImages = 'images'
+  ProductImages = "images",
 }

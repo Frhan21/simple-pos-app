@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   DashboardDescription,
   DashboardHeader,
@@ -48,8 +45,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     resolver: zodResolver(categoryFormSchema),
   });
 
-  const { data: categories} =
-    api.category.getCategories.useQuery();
+  const { data: categories } = api.category.getCategories.useQuery();
 
   const { mutate: createCategory } = api.category.createCategory.useMutation({
     onSuccess: async () => {
@@ -165,8 +161,7 @@ const CategoriesPage: NextPageWithLayout = () => {
       </DashboardHeader>
 
       <div className="grid grid-cols-4 gap-4">
-        {// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        categories?.map((category) => {
+        {categories?.map((category) => {
           return (
             <CategoryCatalogCard
               key={category.id}

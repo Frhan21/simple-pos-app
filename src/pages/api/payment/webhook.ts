@@ -24,7 +24,7 @@ const handler: NextApiHandler = async (req, res) => {
   if (webhookToken !== process.env.XENDIT_WEBHOOK_VERIFICATION) {
     return res.status(401);
   }
-  
+
   const body = req.body as Partial<XenditWebhookBody> | undefined;
   if (!body?.data?.reference_id || !body?.data?.status) {
     return res.status(400).json({ error: "Invalid webhook payload" });

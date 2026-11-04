@@ -1,5 +1,5 @@
 import { createQRIS, xenditPaymentClient } from "@/server/xendit";
-import { OrderStatus, Prisma } from "@prisma/client";
+import { OrderStatus, type Prisma } from "@/generated/prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";

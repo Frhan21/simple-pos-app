@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/utils/api";
 import { toRupiah } from "@/utils/toRupiah";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus } from "@/generated/prisma/enums";
 import Head from "next/head";
 import { useState, type ReactElement } from "react";
 import { toast } from "sonner";

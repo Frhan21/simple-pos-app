@@ -1,6 +1,6 @@
 import { Bucket } from "@/server/bucket";
 import { supabaseAdmin } from "@/server/supabase-admin";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";

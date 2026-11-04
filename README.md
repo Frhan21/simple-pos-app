@@ -1,29 +1,62 @@
-# Create T3 App
+# Simple POS
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Aplikasi Point-of-Sale (POS) sederhana berbasis [Next.js](https://nextjs.org) (Pages Router) dengan tRPC, Prisma 7 + PostgreSQL, Clerk (auth), Supabase Storage, dan Xendit (QRIS).
 
-## What's next? How do I make an app with this?
+## Requirements
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- Node.js `>=20.9` (disarankan LTS aktif saat ini)
+- npm `>=10` (repo pin `packageManager`)
+- Docker atau Podman (untuk PostgreSQL lokal)
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Bootstrap lokal
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+1. Salin env lokal:
 
-## Learn More
+   ```bash
+   cp .env.example .env
+   ```
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+   Lalu isi nilai untuk `DATABASE_URL`, clerk, supabase, dan xendit sesuai kebutuhan.
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+2. Jalankan PostgreSQL lokal (script docker):
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+   ```bash
+   ./start-database.sh
+   ```
 
-## How do I deploy this?
+3. Install dependency dan generate Prisma Client:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+   ```bash
+   npm install
+   npm run db:generate
+   ```
+
+4. Sinkron schema ke database development:
+   ```bash
+   npm run db:push
+   ```
+
+## Perintah umum
+
+| Perintah                                | Fungsi                        |
+| --------------------------------------- | ----------------------------- |
+| `npm run dev`                           | Dev server Next.js            |
+| `npm run build`                         | Build produksi                |
+| `npm start`                             | Jalankan hasil build produksi |
+| `npm run check`                         | ESLint + typecheck            |
+| `npm run lint`                          | Lint (ESLint CLI)             |
+| `npm run lint:fix`                      | Lint dengan autofix           |
+| `npm run format:check` / `format:write` | Prettier check/write          |
+| `npm run db:generate`                   | Prisma generate client        |
+| `npm run db:push`                       | Sinkron schema ke DB dev      |
+| `npm run db:migrate`                    | Prisma migrate deploy         |
+| `npm run db:studio`                     | Prisma Studio                 |
+
+## Environment variables
+
+- `DATABASE_URL`: URL PostgreSQL (CLI Prisma + driver adapter runtime)
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`: auth Clerk
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_ROLE_KEY`: Supabase Storage
+- `XENDIT_SECRET_KEY`, `XENDIT_WEBHOOK_VERIFICATION`: Xendit QRIS + webhook
+
+Jangan commit nilai env nyata; `.env` sudah diabaikan git.

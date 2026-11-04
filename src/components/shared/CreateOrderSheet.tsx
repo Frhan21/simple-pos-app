@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogContent,
-  AlertDialogFooter
+  AlertDialogFooter,
 } from "../ui/alert-dialog";
 import { Separator } from "../ui/separator";
 import {
