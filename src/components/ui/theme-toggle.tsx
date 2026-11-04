@@ -6,15 +6,21 @@ import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+
+  const toggleTheme = () => {
+    const systemIsDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    const currentTheme = resolvedTheme ?? (systemIsDark ? "dark" : "light");
+    setTheme(currentTheme === "dark" ? "light" : "dark");
+  };
 
   return (
     <Button
       type="button"
       variant="outline"
       size="icon"
-      onClick={() => resolvedTheme && setTheme(isDark ? "light" : "dark")}
-      disabled={!resolvedTheme}
+      onClick={toggleTheme}
       aria-label="Toggle light and dark theme"
       title="Toggle light and dark theme"
     >

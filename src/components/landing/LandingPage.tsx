@@ -1,11 +1,10 @@
 import { useUser } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import Head from "next/head";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
 
 import { SimplePosMark } from "@/components/brand/SimplePosMark";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   FaqList,
   FeatureRail,
@@ -13,6 +12,7 @@ import {
   Reveal,
   StackOrbit,
 } from "@/components/landing/AnimatedLanding";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function LandingPage() {
   const { isLoaded, isSignedIn } = useUser();
@@ -23,7 +23,7 @@ export function LandingPage() {
   return (
     <>
       <Head>
-        <title>Simple POS — Point of sale, without the noise</title>
+        <title>KasirPos — Point of sale, without the noise</title>
         <meta
           name="description"
           content="A portfolio point-of-sale application for ordering, catalog management, QRIS payments, and sales tracking."
@@ -31,13 +31,13 @@ export function LandingPage() {
       </Head>
       <div className="landing-page bg-background text-foreground min-h-svh overflow-hidden">
         <header className="border-border/70 bg-background/90 sticky top-0 z-50 border-b backdrop-blur-md">
-          <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-5 sm:px-8">
+          <div className="mx-auto flex h-20 max-w-360 items-center justify-between px-5 sm:px-8">
             <Link
               href="/"
               className="flex items-center gap-3 font-semibold tracking-[-0.03em]"
             >
               <SimplePosMark className="text-foreground" />
-              Simple POS
+              Kasir POS
             </Link>
             <nav
               className="hidden items-center gap-8 text-sm font-medium md:flex"
@@ -82,8 +82,8 @@ export function LandingPage() {
         </header>
 
         <main className="landing-grid">
-          <section className="grid-section relative mx-auto min-h-[calc(100svh-5rem)] max-w-[1440px] px-5 pt-14 pb-16 sm:px-8 lg:pt-20">
-            <div className="relative z-10 grid items-center gap-12 lg:grid-cols-2 lg:gap-14">
+          <section className="grid-section relative mx-auto min-h-[calc(100svh-5rem)] max-w-360 px-5 py-16 sm:px-8 lg:pt-20">
+            <div className="relative z-10 grid items-center gap-12 lg:grid-cols-2 lg:gap-14 px-16">
               <div className="max-w-xl">
                 <motion.h1
                   initial={reduced ? false : { opacity: 0, y: 34 }}
@@ -131,9 +131,9 @@ export function LandingPage() {
 
           <section
             id="product"
-            className="grid-section bg-foreground text-background px-5 py-24 sm:px-8 lg:py-36"
+            className="grid-section bg-foreground text-background px-5 py-24 sm:px-8 lg:py-36 mt-24"
           >
-            <div className="mx-auto grid max-w-[1376px] gap-12 lg:grid-cols-[.72fr_1.28fr]">
+            <div className="mx-auto grid max-w-[1376px] gap-12 lg:grid-cols-[.72fr_1.28fr] px-16">
               <Reveal>
                 <h2 className="text-4xl leading-none font-extrabold tracking-[-.05em] sm:text-6xl">
                   The counter,
@@ -162,7 +162,7 @@ export function LandingPage() {
             id="features"
             className="grid-section px-5 py-24 sm:px-8 lg:py-36"
           >
-            <div className="mx-auto max-w-[1376px]">
+            <div className="mx-auto max-w-[1376px] px-16">
               <Reveal className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
                 <h2 className="text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
                   Built around the sale
@@ -180,7 +180,7 @@ export function LandingPage() {
             id="stack"
             className="bg-[#171917] px-5 py-24 text-[#f4f1e8] sm:px-8 lg:py-32"
           >
-            <div className="mx-auto grid max-w-[1376px] gap-14 lg:grid-cols-[.78fr_1.22fr]">
+            <div className="mx-auto grid max-w-[1376px] gap-12 lg:grid-cols-[.78fr_1.22fr] px-16">
               <Reveal>
                 <h2 className="text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
                   A working
@@ -200,7 +200,7 @@ export function LandingPage() {
             id="faq"
             className="grid-section px-5 py-24 sm:px-8 lg:py-36"
           >
-            <div className="mx-auto grid max-w-[1376px] gap-10 lg:grid-cols-[.88fr_1.12fr] lg:items-start">
+            <div className="mx-auto grid max-w-[1376px] gap-10 lg:grid-cols-[.88fr_1.12fr] lg:items-start px-16">
               <Reveal>
                 <h2 className="text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
                   Questions,

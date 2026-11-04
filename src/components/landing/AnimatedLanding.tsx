@@ -1,11 +1,3 @@
-import { useRef, useState, type ReactNode } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "motion/react";
 import {
   BarChart3,
   Boxes,
@@ -16,6 +8,15 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
+import { useRef, useState, type ReactNode } from "react";
+import { RiSecurePaymentLine } from "react-icons/ri";
+import {
   SiClerk,
   SiNextdotjs,
   SiPostgresql,
@@ -24,7 +25,6 @@ import {
   SiTrpc,
   SiTypescript,
 } from "react-icons/si";
-import { RiSecurePaymentLine } from "react-icons/ri";
 
 const products = [
   {
@@ -374,7 +374,7 @@ export function FaqList() {
   return (
     <div>
       {faqs.map(([q, a], i) => (
-        <div key={q} className="border-border border-t">
+        <div key={q} className="border-border border-t px-6 py-2">
           <button
             id={`faq-trigger-${i}`}
             className="flex w-full items-center justify-between gap-6 py-6 text-left text-lg font-bold"
