@@ -26,7 +26,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const getLayout = Component.getLayout ?? ((page) => page);
 
   return (
-    <ClerkProvider>
+    // Force Clerk client to route Frontend API/UI through the app proxy (/__clerk),
+    // otherwise on *.vercel.app it falls back to the unusable clerk.<domain> host.
+    <ClerkProvider proxyUrl="/__clerk">
       <Head>
         <link rel="icon" href="/simple-pos-mark.svg" type="image/svg+xml" />
         <link rel="shortcut icon" href="/simple-pos-mark.svg" />
