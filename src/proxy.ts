@@ -15,18 +15,25 @@ const isSystemWebhook = createRouteMatcher([
   "/api/payment/webhook",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
-  const { pathname } = req.nextUrl;
+export default clerkMiddleware(
+  async (auth, req) => {
+    const { userId } = await auth();
+    const { pathname } = req.nextUrl;
 
-  if (!userId && isProtectedRoute(req) && !isSystemWebhook(req)) {
-    const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", pathname);
-    return NextResponse.redirect(signInUrl);
-  }
+    if (!userId && isProtectedRoute(req) && !isSystemWebhook(req)) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("redirect_url", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
 
-  return NextResponse.next();
-});
+    return NextResponse.next();
+  },
+  {
+    // Serve ClerkJS assets and Frontend API through /__clerk so they are not
+    // swallowed by the catch-all page (which returns HTML and breaks clerk-js).
+    frontendApiProxy: { enabled: true },
+  },
+);
 
 export const config = {
   matcher: [
@@ -34,5 +41,7 @@ export const config = {
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes
     "/(api|trpc)(.*)",
+    // Clerk proxy: clerk-js assets (.js) must bypass the static-file exclusion
+    "/__clerk/(.*)",
   ],
 };
