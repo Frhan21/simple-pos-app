@@ -1,4 +1,4 @@
-name: Production POS APP CI/CD
+name: Production
 
 on:
   push:
