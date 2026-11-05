@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogContent,
-  AlertDialogFooter
+  AlertDialogFooter,
 } from "../ui/alert-dialog";
 import { Separator } from "../ui/separator";
 import {
@@ -32,6 +32,8 @@ type OrderItemProps = {
 };
 
 const OrderItem = ({ id, name, price, quantity, imageUrl }: OrderItemProps) => {
+  const { increaseQuantity, decreaseQuantity } = useCartStore();
+
   return (
     <div className="flex gap-3" key={id}>
       <div className="relative aspect-square h-20 shrink-0 overflow-hidden rounded-xl">
@@ -56,13 +58,23 @@ const OrderItem = ({ id, name, price, quantity, imageUrl }: OrderItemProps) => {
           <p className="font-medium">{toRupiah(quantity * price)}</p>
 
           <div className="flex items-center gap-3">
-            <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
+            <button
+              type="button"
+              aria-label={`Kurangi ${name}`}
+              onClick={() => decreaseQuantity(id)}
+              className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1"
+            >
               <Minus className="h-4 w-4" />
             </button>
 
             <span className="text-sm">{quantity}</span>
 
-            <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
+            <button
+              type="button"
+              aria-label={`Tambah ${name}`}
+              onClick={() => increaseQuantity(id)}
+              className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1"
+            >
               <Plus className="h-4 w-4" />
             </button>
           </div>
@@ -93,6 +105,8 @@ export const CreateOrderSheet = ({
   const tax = useMemo(() => subtotal * 0.1, [subtotal]);
   const grandTotal = useMemo(() => subtotal + tax, [subtotal, tax]);
 
+  const apiUtils = api.useUtils();
+
   const { mutate: createOrder, data: createOrderResponse } =
     api.order.createOrder.useMutation({
       onSuccess: () => {
@@ -102,8 +116,10 @@ export const CreateOrderSheet = ({
     });
 
   const { mutate: simluationPayment } = api.order.simulatePayment.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast("Simulated payment");
+      await apiUtils.order.getOrders.invalidate();
+      await apiUtils.order.getSalesRepost.invalidate();
     },
   });
 
@@ -113,10 +129,11 @@ export const CreateOrderSheet = ({
     isPending: paymentPending,
     reset: resetCheckPaidPayment,
   } = api.order.checkOrderStatus.useMutation({
-    onSuccess: (orderPaid) => {
+    onSuccess: async (orderPaid) => {
       if (orderPaid) {
         cartStore.clearCart();
-        return;
+        await apiUtils.order.getOrders.invalidate();
+        await apiUtils.order.getSalesRepost.invalidate();
       }
     },
   });
@@ -225,7 +242,7 @@ export const CreateOrderSheet = ({
 
             {paymentInfoLoading ? (
               <div className="flex flex-col items-center justify-center gap-2">
-                <div className="border-primary h-10 w-10 animate-spin rounded-full border-t-2 border-b-2 border-l-2" />
+                <div className="border-muted border-t-primary size-10 animate-spin rounded-full border-2" />
 
                 <p>Loading...</p>
               </div>

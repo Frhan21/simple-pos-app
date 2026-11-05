@@ -1,8 +1,13 @@
-import { createQRIS, xenditPaymentClient } from "@/server/xendit";
-import { OrderStatus, Prisma } from "@prisma/client";
+import { createQRIS } from "@/server/xendit";
+import { env } from "@/env.js";
+import { OrderStatus, type Prisma } from "@/generated/prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  mapRecordNotFound,
+} from "../trpc";
 
 export const orderRouter = createTRPCRouter({
   createOrder: protectedProcedure
@@ -17,12 +22,28 @@ export const orderRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { db } = ctx;
+      const { db, currentUser } = ctx;
       const { orderItems } = input;
-      // Data real dari DB berdasarkan ID produk yang diabmil
+
+      const requestedProductIds = [
+        ...new Set(orderItems.map((i) => i.productId)),
+      ];
+
+      // Scoped to the current user: other tenants' product IDs are invisible.
       const products = await db.product.findMany({
-        where: { id: { in: orderItems.map((item) => item.productId) } },
+        where: {
+          id: { in: requestedProductIds },
+          userId: currentUser.id,
+        },
       });
+
+      if (products.length !== requestedProductIds.length) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "One or more products not found",
+        });
+      }
+
       // Hitung total harga
       let subtotal = 0;
       products.forEach((product) => {
@@ -35,29 +56,33 @@ export const orderRouter = createTRPCRouter({
 
       const tax = subtotal * 0.1; // Misal pajak 10%
       const grandTotal = subtotal + tax;
-      // Buat order baru
-      const order = await db.order.create({
-        data: {
-          grandtotal: grandTotal,
-          subtotal: subtotal,
-          tax: tax,
-        },
-      });
+      // Buat order + items atomically
+      const { order, itemsOrder } = await db.$transaction(async (tx) => {
+        const order = await tx.order.create({
+          data: {
+            grandtotal: grandTotal,
+            subtotal: subtotal,
+            tax: tax,
+            userId: currentUser.id,
+          },
+        });
 
-      const itemsOrder = await db.orderItem.createMany({
-        data: products.map((product) => {
-          const prodQty =
-            orderItems.find((item) => item.productId === product.id)!
-              .quantity ?? 0;
+        const itemsOrder = await tx.orderItem.createMany({
+          data: products.map((product) => {
+            const prodQty =
+              orderItems.find((item) => item.productId === product.id)!
+                .quantity ?? 0;
 
-          // const totalPrice = prodQty * product.price;
-          return {
-            orderId: order.id,
-            price: product.price,
-            productId: product.id,
-            quantity: prodQty,
-          };
-        }),
+            return {
+              orderId: order.id,
+              price: product.price,
+              productId: product.id,
+              quantity: prodQty,
+            };
+          }),
+        });
+
+        return { order, itemsOrder };
       });
 
       const paymentRequest = await createQRIS({
@@ -88,12 +113,14 @@ export const orderRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
-      const order = await db.order.findUnique({
+      const { db, currentUser } = ctx;
+      const order = await db.order.findFirst({
         where: {
           id: input.orderId,
+          userId: currentUser.id,
         },
         select: {
+          status: true,
           externalTransactionId: true,
           paymentMethodId: true,
           grandtotal: true,
@@ -116,22 +143,46 @@ export const orderRouter = createTRPCRouter({
 
       console.log("Order ID: ", order.externalTransactionId);
 
-      await xenditPaymentClient.simulatePayment({
-        paymentMethodId: order.paymentMethodId,
-        data: {
-          amount: order.grandtotal,
-        },
-      });
+      // Idempotent: re-clicking "Simulate payment" on an already-PAID order is a no-op.
+      if (order.status === OrderStatus.PAID) {
+        return;
+      }
 
-      await db.order.update({
-        where: {
-          id: input.orderId,
+      // xendit-node's simulatePayment crashes on its own (TypeError reading
+      // 'slice' parsing the void response) even when Xendit returns 200,
+      // so call the endpoint directly and treat 2xx as accepted.
+      const auth = Buffer.from(`${env.XENDIT_SECRET_KEY}:`).toString("base64");
+      const simulateRes = await fetch(
+        `https://api.xendit.co/v2/payment_methods/${order.paymentMethodId}/payments/simulate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${auth}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ amount: order.grandtotal }),
         },
-        data: {
-          paidAt: new Date(),
-          status: OrderStatus.PROCESSING,
-        },
-      });
+      );
+
+      if (!simulateRes.ok) {
+        const errBody = await simulateRes.text();
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Simulate payment failed: ${simulateRes.status} ${errBody.slice(0, 200)}`,
+        });
+      }
+
+      await db.order
+        .update({
+          where: {
+            id: input.orderId,
+          },
+          data: {
+            paidAt: new Date(),
+            status: OrderStatus.PAID,
+          },
+        })
+        .catch(mapRecordNotFound);
     }),
 
   checkOrderStatus: protectedProcedure
@@ -141,10 +192,11 @@ export const orderRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
-      const order = await db.order.findUnique({
+      const { db, currentUser } = ctx;
+      const order = await db.order.findFirst({
         where: {
           id: input.orderId,
+          userId: currentUser.id,
         },
         select: {
           status: true,
@@ -164,16 +216,18 @@ export const orderRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { db } = ctx;
+      const { db, currentUser } = ctx;
 
-      const whereClause: Prisma.OrderWhereInput = {};
+      const whereClause: Prisma.OrderWhereInput = {
+        userId: currentUser.id,
+      };
 
       switch (input.status) {
         case OrderStatus.AWAITING_PAYMENT:
           whereClause.status = OrderStatus.AWAITING_PAYMENT;
           break;
-        case OrderStatus.PROCESSING:
-          whereClause.status = OrderStatus.PROCESSING;
+        case OrderStatus.PAID:
+          whereClause.status = OrderStatus.PAID;
           break;
         case OrderStatus.DONE:
           whereClause.status = OrderStatus.DONE;
@@ -187,11 +241,25 @@ export const orderRouter = createTRPCRouter({
           grandtotal: true,
           status: true,
           paidAt: true,
-          _count: {
+          createdAt: true,
+          orderItems: {
             select: {
-              orderItems: true,
+              id: true,
+              quantity: true,
+              price: true,
+              product: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+            orderBy: {
+              id: "asc",
             },
           },
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       });
       return orders;
@@ -204,11 +272,12 @@ export const orderRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
+      const { db, currentUser } = ctx;
 
-      const order = await db.order.findUnique({
+      const order = await db.order.findFirst({
         where: {
           id: input.orderId,
+          userId: currentUser.id,
         },
         select: {
           paidAt: true,
@@ -231,27 +300,30 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      if (order.status !== OrderStatus.PROCESSING) {
+      if (order.status !== OrderStatus.PAID) {
         throw new TRPCError({
           code: "UNPROCESSABLE_CONTENT",
-          message: "Payment is Not Processing",
+          message: "Order is not PAID yet",
         });
       }
 
-      return await db.order.update({
-        where: {
-          id: order.id,
-        },
-        data: {
-          status: OrderStatus.DONE,
-        },
-      });
+      return await db.order
+        .update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            status: OrderStatus.DONE,
+          },
+        })
+        .catch(mapRecordNotFound);
     }),
 
   getSalesRepost: protectedProcedure.query(async ({ ctx }) => {
-    const { db } = ctx;
+    const { db, currentUser } = ctx;
     const paidOrdersQuery = db.order.findMany({
       where: {
+        userId: currentUser.id,
         paidAt: {
           not: null,
         },
@@ -263,6 +335,7 @@ export const orderRouter = createTRPCRouter({
 
     const onGoingOrderQuery = db.order.findMany({
       where: {
+        userId: currentUser.id,
         status: {
           not: "DONE",
         },
@@ -274,6 +347,7 @@ export const orderRouter = createTRPCRouter({
 
     const completeOrderQuery = db.order.findMany({
       where: {
+        userId: currentUser.id,
         status: "DONE",
       },
       select: {

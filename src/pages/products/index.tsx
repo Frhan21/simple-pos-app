@@ -5,6 +5,10 @@ import {
   DashboardTitle,
 } from "@/components/layouts/DashboardLayout";
 import { ProductCatalogCard } from "@/components/shared/product/ProductCatalogCard";
+import {
+  CatalogEmpty,
+  CatalogTable,
+} from "@/components/shared/catalog/CatalogTable";
 import { ProductForm } from "@/components/shared/product/ProductForm";
 import {
   AlertDialog,
@@ -23,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Head from "next/head";
 import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
+import { type z } from "zod";
 import { toast } from "sonner";
 import type { NextPageWithLayout } from "../_app";
 
@@ -40,7 +45,9 @@ const ProductsPage: NextPageWithLayout = () => {
 
   const { mutate: createProduct } = api.product.createProduct.useMutation({
     onSuccess: async () => {
+      await apiUtils.product.getAllProducts.invalidate();
       await apiUtils.product.getProducts.invalidate();
+      await apiUtils.category.getCategories.invalidate(); // productCount/_count
       toast("Product has been created");
       setProductFormOpen(false);
       setCreateImageUrl(null);
@@ -51,13 +58,17 @@ const ProductsPage: NextPageWithLayout = () => {
   const { mutate: deleteProduct } = api.product.deleteProduct.useMutation({
     onSuccess: async () => {
       await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
+      await apiUtils.category.getCategories.invalidate();
       toast("Product has been deleted");
     },
   });
 
   const { mutate: editProduct } = api.product.editProduct.useMutation({
     onSuccess: async () => {
+      await apiUtils.product.getAllProducts.invalidate();
       await apiUtils.product.getProducts.invalidate();
+      await apiUtils.category.getCategories.invalidate(); // productCount/_count
       toast("Product has been updated");
       setEditFormOpen(false);
       setEditImageUrl(null);
@@ -66,11 +77,20 @@ const ProductsPage: NextPageWithLayout = () => {
     },
   });
 
-  const creatProductForm = useForm<ProductFormSchema>({
+  // z.coerce: resolver input = unknown, output = number (Zod 4 + resolvers v7)
+  const creatProductForm = useForm<
+    z.input<typeof productFormSchema>,
+    unknown,
+    ProductFormSchema
+  >({
     resolver: zodResolver(productFormSchema),
   });
 
-  const editProductForm = useForm<ProductFormSchema>({
+  const editProductForm = useForm<
+    z.input<typeof productFormSchema>,
+    unknown,
+    ProductFormSchema
+  >({
     resolver: zodResolver(productFormSchema),
   });
 
@@ -127,16 +147,17 @@ const ProductsPage: NextPageWithLayout = () => {
         <meta name="description" content="Manage your products" />
       </Head>
       <DashboardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <DashboardTitle>Product Management</DashboardTitle>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <DashboardTitle>Products</DashboardTitle>
             <DashboardDescription>
-              View, add, edit, and delete products in your inventory.
+              Keep names, categories, prices, and product images ready for the
+              counter.
             </DashboardDescription>
           </div>
           <AlertDialog open={productFormOpen} onOpenChange={setProductFormOpen}>
             <AlertDialogTrigger asChild>
-              <Button>Add New Product</Button>
+              <Button className="h-11 rounded-sm">Add product</Button>
             </AlertDialogTrigger>
 
             <AlertDialogContent>
@@ -164,9 +185,17 @@ const ProductsPage: NextPageWithLayout = () => {
         </div>
       </DashboardHeader>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {products?.map((product) => {
-          return (
+      {productLoading ? (
+        <div
+          className="bg-muted h-72 animate-pulse"
+          aria-label="Loading products"
+        />
+      ) : products?.length ? (
+        <CatalogTable
+          headers={["Product", "Category", "Price", "Actions"]}
+          headerClassName="md:grid-cols-[minmax(260px,1.5fr)_minmax(150px,.8fr)_minmax(160px,.65fr)_200px] md:gap-x-6"
+        >
+          {products.map((product) => (
             <ProductCatalogCard
               key={product.id}
               name={product.name}
@@ -183,9 +212,14 @@ const ProductsPage: NextPageWithLayout = () => {
                 })
               }
             />
-          );
-        })}
-      </div>
+          ))}
+        </CatalogTable>
+      ) : (
+        <CatalogEmpty
+          title="No products yet"
+          description="Add the first product to make it available at the counter."
+        />
+      )}
 
       <AlertDialog open={editFormOpen} onOpenChange={setEditFormOpen}>
         <AlertDialogContent>

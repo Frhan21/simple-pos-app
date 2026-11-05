@@ -1,8 +1,9 @@
 import { db } from "@/server/db";
 import type { NextApiHandler } from "next";
 
-type XenditWebhookBody = {
-  event: "payment.succeded";
+// Events that carry an order reference we act on.
+type PaymentSucceededBody = {
+  event: "payment.succeeded" | "payment.succeded";
   data: {
     id: string;
     amount: number;
@@ -11,6 +12,27 @@ type XenditWebhookBody = {
     status: "SUCCEEDED" | "FAILED";
   };
 };
+
+type PaymentMethodBody = {
+  event:
+    | "payment_method.expired"
+    | "payment_method.activated"
+    | "payment_method.pending"
+    | "payment_method.succeeded";
+  data: {
+    id: string;
+    status: string;
+    reference_id?: string;
+  };
+};
+
+type XenditWebhookBody = PaymentSucceededBody | PaymentMethodBody;
+
+const isPaymentSucceeded = (
+  body: XenditWebhookBody,
+): body is PaymentSucceededBody =>
+  "event" in body &&
+  (body.event === "payment.succeeded" || body.event === "payment.succeded");
 
 const handler: NextApiHandler = async (req, res) => {
   if (req.method !== "POST") {
@@ -22,11 +44,21 @@ const handler: NextApiHandler = async (req, res) => {
   const webhookToken = headers["x-callback-token"];
 
   if (webhookToken !== process.env.XENDIT_WEBHOOK_VERIFICATION) {
-    return res.status(401);
+    return res.status(401).json({ error: "Invalid callback token" });
   }
-  
-  const body = req.body as Partial<XenditWebhookBody> | undefined;
-  if (!body?.data?.reference_id || !body?.data?.status) {
+
+  const body = req.body as XenditWebhookBody | undefined;
+
+  if (!body?.event) {
+    return res.status(400).json({ error: "Invalid webhook payload" });
+  }
+
+  // Acknowledge lifecycle events we don't act on so Xendit stops retrying.
+  if (!isPaymentSucceeded(body)) {
+    return res.status(200).json({ ok: true, ignored: body.event });
+  }
+
+  if (!body.data?.reference_id || !body.data?.status) {
     return res.status(400).json({ error: "Invalid webhook payload" });
   }
   //   process order
@@ -38,20 +70,27 @@ const handler: NextApiHandler = async (req, res) => {
   });
 
   if (!order) {
-    return res.status(404).send("order not found!");
+    // Unknown/foreign reference: ack so Xendit stops retrying.
+    return res.status(200).json({ ok: true, ignored: "unknown order" });
   }
 
   if (body.data.status !== "SUCCEEDED") {
     return res.status(200).json({ ok: true });
   }
+
+  // Idempotent: Xendit retries webhooks; don't overwrite an already-paid order.
+  if (order.paidAt) {
+    return res.status(200).json({ ok: true });
+  }
   // 2. update order if success
-  await db.order.update({
+  await db.order.updateMany({
     where: {
       id: order.id,
+      paidAt: null, // guard against retry racing past the check above
     },
     data: {
       paidAt: new Date(),
-      status: "PROCESSING",
+      status: "PAID",
     },
   });
 

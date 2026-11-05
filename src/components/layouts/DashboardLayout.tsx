@@ -1,162 +1,168 @@
-import { BarChart3, Grid3X3, Package, ShoppingCart, Sun } from "lucide-react";
+import {
+  BarChart3,
+  Grid3X3,
+  LogOut,
+  Package,
+  ShoppingCart,
+} from "lucide-react";
 import React, { type ReactNode } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { SignOutButton } from "@clerk/nextjs";
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarSeparator,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useRouter } from "next/router";
-import Link from "next/link";
-import { useTheme } from "next-themes";
-import { Button } from "../ui/button";
-import { SignOutButton } from "@clerk/nextjs";
-
-// Dashboard header component
-interface DashboardHeaderProps {
-  children: ReactNode;
-  className?: string;
-}
+import { SimplePosMark } from "@/components/brand/SimplePosMark";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const DashboardHeader = ({
   children,
   className = "",
-}: DashboardHeaderProps) => {
-  return <header className={`mb-6 space-y-2 ${className}`}>{children}</header>;
-};
-
-// Dashboard title component
-interface DashboardTitleProps {
+}: {
   children: ReactNode;
   className?: string;
-}
-
+}) => <header className={cn("mb-8", className)}>{children}</header>;
 export const DashboardTitle = ({
   children,
   className = "",
-}: DashboardTitleProps) => {
-  return (
-    <h1 className={`text-2xl font-bold tracking-tight ${className}`}>
-      {children}
-    </h1>
-  );
-};
-
-// Dashboard description component
-interface DashboardDescriptionProps {
+}: {
   children: ReactNode;
   className?: string;
-}
-
+}) => (
+  <h1
+    className={cn(
+      "text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl",
+      className,
+    )}
+  >
+    {children}
+  </h1>
+);
 export const DashboardDescription = ({
   children,
   className = "",
-}: DashboardDescriptionProps) => {
-  return <p className={`text-muted-foreground ${className}`}>{children}</p>;
-};
-
-// Main dashboard layout component
-interface DashboardLayoutProps {
+}: {
   children: ReactNode;
-}
+  className?: string;
+}) => (
+  <p
+    className={cn(
+      "text-muted-foreground mt-2 max-w-2xl text-[15px] leading-relaxed",
+      className,
+    )}
+  >
+    {children}
+  </p>
+);
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const groups = [
+  {
+    label: "Sell",
+    items: [{ href: "/dashboard", label: "New order", icon: ShoppingCart }],
+  },
+  {
+    label: "Manage",
+    items: [
+      { href: "/products", label: "Products", icon: Package },
+      { href: "/categories", label: "Categories", icon: Grid3X3 },
+      { href: "/sales", label: "Sales", icon: BarChart3 },
+    ],
+  },
+];
+
+export const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
-
-  const { theme, setTheme } = useTheme();
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full">
-        <Sidebar>
-          <SidebarHeader className="p-4">
-            <h2 className="text-xl font-bold">Simple POS</h2>
+    <SidebarProvider defaultOpen>
+      <div className="bg-sidebar flex min-h-svh w-full p-0 md:p-2">
+        <Sidebar variant="inset" collapsible="icon" className="md:py-2 md:pl-2">
+          <SidebarHeader className="px-3 py-4">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 overflow-hidden font-bold tracking-[-0.03em]"
+            >
+              <SimplePosMark className="text-sidebar-primary size-8 shrink-0" />
+              <span className="group-data-[collapsible=icon]:hidden">
+                Simple POS
+              </span>
+            </Link>
           </SidebarHeader>
-          <SidebarContent className="px-4">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Create Order"
-                  isActive={router.pathname.includes("/dashboard")}
-                >
-                  <Link href="/dashboard">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Create Order
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-
-            <SidebarSeparator className="my-2" />
-
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Category Management"
-                  isActive={router.pathname.includes("/categories")}
-                >
-                  <Link href="/categories">
-                    <Grid3X3 className="mr-2 h-4 w-4" />
-                    Category Management
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Product Management"
-                  isActive={router.pathname.includes("/products")}
-                >
-                  <Link href="/products">
-                    <Package className="mr-2 h-4 w-4" />
-                    Product Management
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Sales Dashboard"
-                  isActive={router.pathname.includes("/sales")}
-                >
-                  <Link href="/sales">
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    Sales Dashboard
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+          <SidebarContent className="px-2">
+            {groups.map((group) => (
+              <SidebarGroup key={group.label} className="py-3">
+                <SidebarGroupLabel className="px-2 text-xs font-medium tracking-normal normal-case">
+                  {group.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = router.pathname === item.href;
+                      return (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton
+                            asChild
+                            tooltip={item.label}
+                            isActive={active}
+                            className="h-10 rounded-sm"
+                          >
+                            <Link href={item.href}>
+                              <Icon className="size-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
           </SidebarContent>
-          <SidebarFooter className="p-4">
-            <p className="text-muted-foreground text-xs">Simple POS v1.0</p>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={toggleTheme}>
-                {theme === "dark" ? "Dark Mode" : "Light Mode"}
-              </Button>
-              <SignOutButton redirectUrl="/sign-in">
-                <Button className="cursor-pointer" type="button">
-                  Sign Out
-                </Button>
-              </SignOutButton>
+          <SidebarFooter className="gap-2 p-3">
+            <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
+              <span className="text-muted-foreground text-xs group-data-[collapsible=icon]:hidden">
+                Appearance
+              </span>
+              <ThemeToggle />
             </div>
+            <SignOutButton redirectUrl="/">
+              <Button
+                variant="ghost"
+                className="h-10 w-full justify-start px-2 group-data-[collapsible=icon]:justify-center"
+                aria-label="Sign out"
+              >
+                <LogOut className="size-4" />
+                <span className="group-data-[collapsible=icon]:hidden">
+                  Sign out
+                </span>
+              </Button>
+            </SignOutButton>
           </SidebarFooter>
         </Sidebar>
-
-        <main className="relative flex-1 overflow-auto p-6">{children}</main>
+        <main className="bg-grid bg-background md:ring-border min-w-0 flex-1 overflow-auto md:rounded-lg md:ring-1">
+          <div className="bg-background/95 sticky top-0 z-20 flex h-14 items-center border-b px-4 md:hidden">
+            <SidebarTrigger />
+            <span className="ml-3 font-semibold">Simple POS</span>
+          </div>
+          <div className="mx-auto w-full max-w-[1440px] p-4 sm:p-6 lg:p-8">
+            {children}
+          </div>
+        </main>
       </div>
     </SidebarProvider>
   );

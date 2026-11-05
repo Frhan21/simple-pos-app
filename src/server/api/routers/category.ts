@@ -1,17 +1,21 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  mapRecordNotFound,
+} from "../trpc";
 
 export const categoryRouter = createTRPCRouter({
   getCategories: protectedProcedure.query(async ({ ctx }) => {
-    const { db } = ctx;
+    const { db, currentUser } = ctx;
 
     const categories = await db.category.findMany({
+      where: { userId: currentUser.id },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
         name: true,
         createdAt: true,
-        productCount: true,
         _count: {
           select: {
             products: true,
@@ -32,16 +36,15 @@ export const categoryRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
+      const { db, currentUser } = ctx;
       const newCategory = await db.category.create({
         data: {
           name: input.name,
-          createdBy: ctx.session.userId,
+          userId: currentUser.id,
         },
         select: {
           id: true,
           name: true,
-          productCount: true,
         },
       });
 
@@ -55,12 +58,16 @@ export const categoryRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
-      await db.category.delete({
-        where: {
-          id: input.id,
-        },
-      });
+      const { db, currentUser } = ctx;
+      // Ownership check in where clause: cross-tenant id yields NOT_FOUND.
+      await db.category
+        .delete({
+          where: {
+            id: input.id,
+            userId: currentUser.id,
+          },
+        })
+        .catch(mapRecordNotFound);
     }),
 
   editCategory: protectedProcedure
@@ -74,14 +81,17 @@ export const categoryRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
-      await db.category.update({
-        where: {
-          id: input.id,
-        },
-        data: {
-          name: input.name,
-        },
-      });
+      const { db, currentUser } = ctx;
+      await db.category
+        .update({
+          where: {
+            id: input.id,
+            userId: currentUser.id,
+          },
+          data: {
+            name: input.name,
+          },
+        })
+        .catch(mapRecordNotFound);
     }),
 });

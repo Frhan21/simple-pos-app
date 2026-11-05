@@ -1,7 +1,6 @@
 import type { Bucket } from "@/server/bucket";
 import { createClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
-import { error } from "console";
 
 export const supabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,7 +30,6 @@ export const uploadFiletoSignedUrl = async ({
       .from(bucket)
       .getPublicUrl(data?.path);
     return fileUrl.data.publicUrl;
-    
   } catch (error) {
     if (error instanceof Error) {
       throw new TRPCError({

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   DashboardDescription,
   DashboardHeader,
@@ -8,6 +5,7 @@ import {
   DashboardTitle,
 } from "@/components/layouts/DashboardLayout";
 import { CategoryCatalogCard } from "@/components/shared/category/CategoryCatalogCard";
+import { CatalogEmpty } from "@/components/shared/catalog/CatalogTable";
 import { CategoryForm } from "@/components/shared/category/CategoryForm";
 import {
   AlertDialog,
@@ -48,12 +46,14 @@ const CategoriesPage: NextPageWithLayout = () => {
     resolver: zodResolver(categoryFormSchema),
   });
 
-  const { data: categories} =
-    api.category.getCategories.useQuery();
+  const { data: categories } = api.category.getCategories.useQuery();
 
   const { mutate: createCategory } = api.category.createCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
+      // New category changes what products exist per filter on the dashboard.
+      await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
 
       toast("Category created successfully");
       setCreateCategoryDialogOpen(false);
@@ -64,6 +64,8 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate: deleteCategory } = api.category.deleteCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
+      await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
 
       toast("Category deleted successfully");
       setCategoryToDelete(null);
@@ -73,6 +75,9 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate: editCategory } = api.category.editCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
+      // Product list joins category name; edited name must refresh.
+      await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
 
       toast("Category edited successfully");
       setEditCategoryDialogOpen(false);
@@ -123,11 +128,11 @@ const CategoriesPage: NextPageWithLayout = () => {
         <meta name="description" content="Manage your product categories" />
       </Head>
       <DashboardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <DashboardTitle>Category Management</DashboardTitle>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <DashboardTitle>Categories</DashboardTitle>
             <DashboardDescription>
-              Organize your products with custom categories.
+              Keep the menu easy to browse and every product in the right place.
             </DashboardDescription>
           </div>
 
@@ -136,7 +141,7 @@ const CategoriesPage: NextPageWithLayout = () => {
             onOpenChange={setCreateCategoryDialogOpen}
           >
             <AlertDialogTrigger asChild>
-              <Button>Add New Category</Button>
+              <Button className="h-11 rounded-sm">Add category</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -164,10 +169,14 @@ const CategoriesPage: NextPageWithLayout = () => {
         </div>
       </DashboardHeader>
 
-      <div className="grid grid-cols-4 gap-4">
-        {// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        categories?.map((category) => {
-          return (
+      {categories?.length ? (
+        <div className="bg-card ring-border overflow-hidden ring-1">
+          <div className="text-muted-foreground hidden grid-cols-[minmax(320px,1.5fr)_minmax(160px,.7fr)_96px] gap-4 px-5 py-3 text-sm md:grid">
+            <span>Category</span>
+            <span className="text-right">Products</span>
+            <span className="text-right">Actions</span>
+          </div>
+          {categories.map((category) => (
             <CategoryCatalogCard
               key={category.id}
               name={category.name}
@@ -175,9 +184,14 @@ const CategoriesPage: NextPageWithLayout = () => {
               onEdit={() => handleClickEditCategory(category)}
               onDelete={() => handleClickDeleteCategory(category.id)}
             />
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <CatalogEmpty
+          title="No categories yet"
+          description="Create a category to organize products at the counter."
+        />
+      )}
 
       <AlertDialog
         open={editCategoryDialogOpen}
