@@ -11,8 +11,8 @@
 
 export const OrderStatus = {
   AWAITING_PAYMENT: 'AWAITING_PAYMENT',
-  DONE: 'DONE',
-  PROCESSING: 'PROCESSING'
+  PAID: 'PAID',
+  DONE: 'DONE'
 } as const
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]

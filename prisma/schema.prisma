@@ -1,64 +1,99 @@
 generator client {
-    provider = "prisma-client"
-    output   = "../src/generated/prisma"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
+  provider = "postgresql"
+}
+
+// id = Clerk user ID (user_...). Auth handled by Clerk; no password stored.
+model User {
+  id        String    @id
+  email     String?   @unique
+  name      String?
+  imageUrl  String?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  categories Category[]
+  products   Product[]
+  orders     Order[]
+
+  @@map("users")
 }
 
 model Category {
-    id           String    @id @default(uuid())
-    name         String
-    productCount Int       @default(0)
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @updatedAt
-    createdBy    String
-    products     Product[]
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+
+  user     User      @relation(fields: [userId], references: [id])
+  products Product[]
+
+  @@index([userId])
+  @@map("categories")
 }
 
 model Product {
-    id         String   @id @default(uuid())
-    name       String
-    price      Int
-    imageUrl   String?
-    createAt   DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-    categoryId String
-    category   Category @relation(fields: [categoryId], references: [id])
+  id         String   @id @default(uuid())
+  name       String
+  price      Int
+  imageUrl   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  categoryId String
 
-    orderItems OrderItem[]
+  user       User        @relation(fields: [userId], references: [id])
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+
+  @@index([userId])
+  @@index([userId, categoryId])
+  @@map("products")
 }
 
 model Order {
-    id                    String      @id @default(uuid())
-    subtotal              Int
-    tax                   Int
-    grandtotal            Int
-    externalTransactionId String?
-    paymentMethodId       String?
-    status                OrderStatus @default(AWAITING_PAYMENT)
+  id                    String      @id @default(uuid())
+  subtotal              Int
+  tax                   Int
+  grandtotal            Int
+  externalTransactionId String?
+  paymentMethodId       String?
+  status                OrderStatus @default(AWAITING_PAYMENT)
+  paidAt                DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  userId                String
 
-    orderItems OrderItem[]
+  user       User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
 
-    paidAt    DateTime?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+  @@index([userId])
+  @@index([userId, status])
+  @@map("orders")
 }
 
 enum OrderStatus {
-    AWAITING_PAYMENT
-    DONE
-    PROCESSING
+  AWAITING_PAYMENT
+  PAID
+  DONE
 }
 
 model OrderItem {
-    id        String  @id @default(uuid())
-    productId String
-    orderId   String
-    product   Product @relation(fields: [productId], references: [id])
-    order     Order   @relation(fields: [orderId], references: [id])
+  id        String @id @default(uuid())
+  productId String
+  orderId   String
+  price     Int
+  quantity  Int
 
-    price Int
-    quantity Int
+  product Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
 }

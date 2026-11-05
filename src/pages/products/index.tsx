@@ -45,7 +45,9 @@ const ProductsPage: NextPageWithLayout = () => {
 
   const { mutate: createProduct } = api.product.createProduct.useMutation({
     onSuccess: async () => {
+      await apiUtils.product.getAllProducts.invalidate();
       await apiUtils.product.getProducts.invalidate();
+      await apiUtils.category.getCategories.invalidate(); // productCount/_count
       toast("Product has been created");
       setProductFormOpen(false);
       setCreateImageUrl(null);
@@ -56,13 +58,17 @@ const ProductsPage: NextPageWithLayout = () => {
   const { mutate: deleteProduct } = api.product.deleteProduct.useMutation({
     onSuccess: async () => {
       await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
+      await apiUtils.category.getCategories.invalidate();
       toast("Product has been deleted");
     },
   });
 
   const { mutate: editProduct } = api.product.editProduct.useMutation({
     onSuccess: async () => {
+      await apiUtils.product.getAllProducts.invalidate();
       await apiUtils.product.getProducts.invalidate();
+      await apiUtils.category.getCategories.invalidate(); // productCount/_count
       toast("Product has been updated");
       setEditFormOpen(false);
       setEditImageUrl(null);
@@ -185,7 +191,10 @@ const ProductsPage: NextPageWithLayout = () => {
           aria-label="Loading products"
         />
       ) : products?.length ? (
-        <CatalogTable headers={["Product", "Category", "Price", "Actions"]}>
+        <CatalogTable
+          headers={["Product", "Category", "Price", "Actions"]}
+          headerClassName="md:grid-cols-[minmax(260px,1.5fr)_minmax(150px,.8fr)_minmax(160px,.65fr)_200px] md:gap-x-6"
+        >
           {products.map((product) => (
             <ProductCatalogCard
               key={product.id}

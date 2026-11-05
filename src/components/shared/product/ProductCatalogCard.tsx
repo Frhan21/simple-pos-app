@@ -1,13 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toRupiah } from "@/utils/toRupiah";
 
 export interface ProductCatalogCardProps {
@@ -28,7 +22,7 @@ export const ProductCatalogCard: React.FC<ProductCatalogCardProps> = ({
   onEdit,
   onDelete,
 }) => (
-  <article className="border-border/70 grid gap-4 border-t p-4 first:border-t-0 md:grid-cols-[minmax(260px,1.5fr)_minmax(150px,.8fr)_minmax(130px,.6fr)_96px] md:items-center md:px-5 md:py-3">
+  <article className="border-border/70 grid gap-4 border-t p-4 first:border-t-0 md:grid-cols-[minmax(260px,1.5fr)_minmax(150px,.8fr)_minmax(160px,.65fr)_200px] md:items-center md:gap-x-6 md:px-5 md:py-3">
     <div className="flex min-w-0 items-center gap-3">
       <div className="bg-muted relative size-14 shrink-0 overflow-hidden">
         {image ? (
@@ -47,34 +41,32 @@ export const ProductCatalogCard: React.FC<ProductCatalogCardProps> = ({
     <div className="text-muted-foreground hidden text-sm md:block">
       {category || "—"}
     </div>
-    <div className="font-semibold tabular-nums md:text-right">
+    <div className="font-semibold tabular-nums md:pr-3 md:text-right">
       {toRupiah(price)}
     </div>
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Actions for ${name}`}
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onEdit}>
-            <Pencil />
-            Edit product
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={onDelete}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 />
-            Delete product
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex items-center gap-2 md:justify-end">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-10 flex-1 rounded-sm px-3 sm:flex-none md:h-9"
+        onClick={onEdit}
+        aria-label={`Edit ${name}`}
+      >
+        <Pencil aria-hidden="true" />
+        Edit
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="text-destructive hover:bg-destructive/10 hover:text-destructive focus-visible:text-destructive h-10 flex-1 rounded-sm px-3 sm:flex-none md:h-9"
+        onClick={onDelete}
+        aria-label={`Delete ${name}`}
+      >
+        <Trash2 aria-hidden="true" />
+        Delete
+      </Button>
     </div>
   </article>
 );

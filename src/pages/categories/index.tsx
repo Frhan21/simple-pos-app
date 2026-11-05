@@ -51,6 +51,9 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate: createCategory } = api.category.createCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
+      // New category changes what products exist per filter on the dashboard.
+      await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
 
       toast("Category created successfully");
       setCreateCategoryDialogOpen(false);
@@ -61,6 +64,8 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate: deleteCategory } = api.category.deleteCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
+      await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
 
       toast("Category deleted successfully");
       setCategoryToDelete(null);
@@ -70,6 +75,9 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate: editCategory } = api.category.editCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate();
+      // Product list joins category name; edited name must refresh.
+      await apiUtils.product.getAllProducts.invalidate();
+      await apiUtils.product.getProducts.invalidate();
 
       toast("Category edited successfully");
       setEditCategoryDialogOpen(false);

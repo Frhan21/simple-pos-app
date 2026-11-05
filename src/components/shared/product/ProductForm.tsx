@@ -53,7 +53,7 @@ export const ProductForm = ({
         token: token,
       });
       onChangeImageUrl(imageUrl!);
-      toast("Image uploaded successfully: " + imageUrl);
+      toast("Gambar berhasil diupload");
     }
   };
 

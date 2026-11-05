@@ -82,8 +82,8 @@ export function LandingPage() {
         </header>
 
         <main className="landing-grid">
-          <section className="grid-section relative mx-auto min-h-[calc(100svh-5rem)] max-w-360 px-5 py-16 sm:px-8 lg:pt-20">
-            <div className="relative z-10 grid items-center gap-12 lg:grid-cols-2 lg:gap-14 px-16">
+          <section className="grid-section relative mx-auto min-h-[calc(100svh-5rem)] max-w-360 px-4 py-16 sm:px-2 lg:pt-20">
+            <div className="relative z-10 grid items-center gap-12 lg:grid-cols-2 lg:gap-14 px-4 lg:px-16">
               <div className="max-w-xl">
                 <motion.h1
                   initial={reduced ? false : { opacity: 0, y: 34 }}
@@ -133,7 +133,7 @@ export function LandingPage() {
             id="product"
             className="grid-section bg-foreground text-background px-5 py-24 sm:px-8 lg:py-36 mt-24"
           >
-            <div className="mx-auto grid max-w-[1376px] gap-12 lg:grid-cols-[.72fr_1.28fr] px-16">
+            <div className="mx-auto grid max-w-[1376px] gap-12 lg:grid-cols-[.72fr_1.28fr] lg:px-16 px-4">
               <Reveal>
                 <h2 className="text-4xl leading-none font-extrabold tracking-[-.05em] sm:text-6xl">
                   The counter,
@@ -162,7 +162,7 @@ export function LandingPage() {
             id="features"
             className="grid-section px-5 py-24 sm:px-8 lg:py-36"
           >
-            <div className="mx-auto max-w-[1376px] px-16">
+            <div className="mx-auto max-w-[1376px] lg:px-16 px-4">
               <Reveal className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
                 <h2 className="text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
                   Built around the sale
@@ -180,7 +180,7 @@ export function LandingPage() {
             id="stack"
             className="bg-[#171917] px-5 py-24 text-[#f4f1e8] sm:px-8 lg:py-32"
           >
-            <div className="mx-auto grid max-w-[1376px] gap-12 lg:grid-cols-[.78fr_1.22fr] px-16">
+            <div className="mx-auto grid max-w-[1376px] gap-12 lg:grid-cols-[.78fr_1.22fr] lg:px-16 px-4">
               <Reveal>
                 <h2 className="text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
                   A working
@@ -200,7 +200,7 @@ export function LandingPage() {
             id="faq"
             className="grid-section px-5 py-24 sm:px-8 lg:py-36"
           >
-            <div className="mx-auto grid max-w-[1376px] gap-10 lg:grid-cols-[.88fr_1.12fr] lg:items-start px-16">
+            <div className="mx-auto grid max-w-[1376px] gap-10 lg:grid-cols-[.88fr_1.12fr] lg:items-start lg:px-16 px:4">
               <Reveal>
                 <h2 className="text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
                   Questions,

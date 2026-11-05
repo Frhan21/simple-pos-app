@@ -1,4 +1,6 @@
 import {
+  ArrowLeft,
+  ArrowRight,
   BarChart3,
   Boxes,
   Check,
@@ -14,7 +16,7 @@ import {
   useScroll,
   useTransform,
 } from "motion/react";
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RiSecurePaymentLine } from "react-icons/ri";
 import {
   SiClerk,
@@ -270,43 +272,138 @@ const featureItems = [
 
 export function FeatureRail() {
   const reduced = useReducedMotion();
+  const railRef = useRef<HTMLDivElement>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const updateActiveSlide = () => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const cards = Array.from(
+      rail.querySelectorAll<HTMLElement>("[data-feature-card]"),
+    );
+    if (!cards.length) return;
+
+    const railLeft =
+      rail.getBoundingClientRect().left +
+      Number.parseFloat(window.getComputedStyle(rail).paddingInlineStart);
+    const nearestIndex = cards.reduce((nearest, card, index) => {
+      const nearestDistance = Math.abs(
+        cards[nearest]!.getBoundingClientRect().left - railLeft,
+      );
+      const cardDistance = Math.abs(
+        card.getBoundingClientRect().left - railLeft,
+      );
+      return cardDistance < nearestDistance ? index : nearest;
+    }, 0);
+
+    setActiveSlide(nearestIndex);
+  };
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const handleResize = () => updateActiveSlide();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const goToSlide = (index: number) => {
+    const rail = railRef.current;
+    const card = rail?.querySelectorAll<HTMLElement>("[data-feature-card]")[
+      index
+    ];
+    if (!rail || !card) return;
+
+    const railPadding = Number.parseFloat(
+      window.getComputedStyle(rail).paddingInlineStart,
+    );
+    rail.scrollTo({
+      left: card.offsetLeft - railPadding,
+      behavior: reduced ? "auto" : "smooth",
+    });
+    setActiveSlide(index);
+  };
+
   return (
-    <div className="flex snap-x gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-4 lg:overflow-visible">
-      {featureItems.map((item, i) => {
-        const Icon = item.icon;
-        return (
-          <motion.article
-            key={item.title}
-            initial={reduced ? false : { opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.08, duration: 0.55 }}
-            whileHover={
-              reduced ? undefined : { y: -10, rotate: i % 2 ? 1 : -1 }
-            }
-            className={`group min-w-[82vw] snap-center rounded-[18px] p-6 sm:min-w-[360px] lg:min-w-0 ${item.tone}`}
-          >
-            <div className="flex min-h-[280px] flex-col">
-              <span
-                className={`grid size-16 place-items-center rounded-2xl ${item.iconTone}`}
-              >
-                <Icon
-                  className="size-8 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
-                  strokeWidth={1.75}
-                />
-              </span>
-              <div className="mt-auto">
-                <h3 className="text-4xl font-black tracking-[-.05em]">
-                  {item.title}
-                </h3>
-                <p className="mt-4 text-[15px] leading-relaxed font-medium opacity-70">
-                  {item.text}
-                </p>
+    <div>
+      <div
+        ref={railRef}
+        onScroll={updateActiveSlide}
+        className="feature-rail -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 lg:pb-0"
+        aria-label="Simple POS features"
+      >
+        {featureItems.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <motion.article
+              key={item.title}
+              data-feature-card
+              initial={reduced ? false : { opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.55 }}
+              whileHover={
+                reduced ? undefined : { y: -10, rotate: i % 2 ? 1 : -1 }
+              }
+              className={`group min-w-[calc(100vw-4.5rem)] snap-start scroll-ml-5 rounded-[18px] p-6 sm:min-w-[calc(58vw-2rem)] sm:scroll-ml-8 lg:min-w-0 lg:scroll-ml-0 ${item.tone}`}
+            >
+              <div className="flex min-h-[280px] flex-col">
+                <span
+                  className={`grid size-16 place-items-center rounded-2xl ${item.iconTone}`}
+                >
+                  <Icon
+                    className="size-8 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                </span>
+                <div className="mt-auto">
+                  <h3 className="text-4xl font-black tracking-[-.05em]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-4 text-[15px] leading-relaxed font-medium opacity-70">
+                    {item.text}
+                  </p>
+                </div>
               </div>
-            </div>
-          </motion.article>
-        );
-      })}
+            </motion.article>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between lg:hidden">
+        <p
+          className="text-muted-foreground text-sm tabular-nums"
+          aria-live="polite"
+        >
+          <span className="text-foreground font-bold">{activeSlide + 1}</span>
+          <span aria-hidden="true"> / </span>
+          <span className="sr-only"> of </span>
+          {featureItems.length}
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => goToSlide(activeSlide - 1)}
+            disabled={activeSlide === 0}
+            className="border-border hover:bg-muted focus-visible:ring-ring grid size-11 place-items-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label="Previous feature"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => goToSlide(activeSlide + 1)}
+            disabled={activeSlide === featureItems.length - 1}
+            className="bg-foreground text-background focus-visible:ring-ring grid size-11 place-items-center rounded-full transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label="Next feature"
+          >
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

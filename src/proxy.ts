@@ -9,11 +9,17 @@ const isProtectedRoute = createRouteMatcher([
   "/sales(.*)",
 ]);
 
+// System-to-system callbacks must bypass the sign-in redirect.
+const isSystemWebhook = createRouteMatcher([
+  "/api/clerk/webhooks",
+  "/api/payment/webhook",
+]);
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   const { pathname } = req.nextUrl;
 
-  if (!userId && isProtectedRoute(req)) {
+  if (!userId && isProtectedRoute(req) && !isSystemWebhook(req)) {
     const signInUrl = new URL("/sign-in", req.url);
     signInUrl.searchParams.set("redirect_url", pathname);
     return NextResponse.redirect(signInUrl);

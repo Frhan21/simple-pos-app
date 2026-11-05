@@ -42,6 +42,17 @@ export const api = createTRPCNext<AppRouter>({
           url: `${getBaseUrl()}/api/trpc`,
         }),
       ],
+      queryClientConfig: {
+        defaultOptions: {
+          queries: {
+            // Data only changes via mutations, which invalidate explicitly.
+            // Avoid immediate refetch on remount so invalidate() feels instant.
+            staleTime: 30_000,
+            refetchOnWindowFocus: false,
+            retry: false,
+          },
+        },
+      },
     };
   },
   /**

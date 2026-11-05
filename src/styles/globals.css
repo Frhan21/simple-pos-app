@@ -151,6 +151,14 @@
     position: relative;
     z-index: 1;
   }
+  .feature-rail {
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+    touch-action: pan-x pan-y;
+  }
+  .feature-rail::-webkit-scrollbar {
+    display: none;
+  }
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }

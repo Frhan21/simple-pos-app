@@ -16,15 +16,17 @@ import { api } from "@/utils/api";
 import { toRupiah } from "@/utils/toRupiah";
 import { OrderStatus } from "@/generated/prisma/enums";
 import Head from "next/head";
+import { ReceiptText } from "lucide-react";
 import { useState, type ReactElement } from "react";
 import { toast } from "sonner";
 import type { NextPageWithLayout } from "../_app";
 
 const SalesPage: NextPageWithLayout = () => {
   const [filteredOrder, setFilterOrder] = useState<OrderStatus | "ALL">("ALL");
-  const { data: orders } = api.order.getOrders.useQuery({
-    status: filteredOrder,
-  });
+  const { data: orders, isLoading: ordersLoading } =
+    api.order.getOrders.useQuery({
+      status: filteredOrder,
+    });
 
   const apiUtils = api.useUtils();
 
@@ -35,7 +37,10 @@ const SalesPage: NextPageWithLayout = () => {
   } = api.order.updateOrderStatus.useMutation({
     onSuccess: async () => {
       await apiUtils.order.invalidate();
-      toast("Finished Order");
+      toast.success("Order finished");
+    },
+    onError: (error) => {
+      toast.error("Could not finish order", { description: error.message });
     },
   });
 
@@ -85,41 +90,85 @@ const SalesPage: NextPageWithLayout = () => {
         </div>
       </div>
 
-      <div className="bg-card ring-border p-4 ring-1 sm:p-6">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-bold">Orders</h2>
-          <Select defaultValue="ALL" onValueChange={handleFilterOrder}>
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih filter...." />
+      <section aria-labelledby="order-tickets-title">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2
+              id="order-tickets-title"
+              className="text-xl font-bold tracking-tight"
+            >
+              Order tickets
+            </h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Every ticket shows the products, quantities, and captured sale
+              prices.
+            </p>
+          </div>
+          <Select value={filteredOrder} onValueChange={handleFilterOrder}>
+            <SelectTrigger
+              className="w-full sm:w-52"
+              aria-label="Filter orders by status"
+            >
+              <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent align="end">
-              <SelectItem value="ALL">ALL</SelectItem>
-              {Object.keys(OrderStatus).map((orderStatus, i) => {
-                return (
-                  <SelectItem key={i} value={orderStatus}>
-                    {OrderStatus[orderStatus as keyof typeof OrderStatus]}
-                  </SelectItem>
-                );
-              })}
+              <SelectItem value="ALL">All orders</SelectItem>
+              {Object.keys(OrderStatus).map((orderStatus) => (
+                <SelectItem key={orderStatus} value={orderStatus}>
+                  {orderStatus.replaceAll("_", " ").toLowerCase()}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {orders?.map((order) => (
-            <OrderCard
-              key={order.id}
-              id={order.id}
-              status={order.status}
-              totalAmount={order.grandtotal}
-              totalItems={order._count.orderItems}
-              isFinishOrder={
-                isFinishOrder && order.id === finishOrderVariable.orderId
-              }
-              onFinishOrder={handleFinishOrder}
-            />
-          ))}
-        </div>
-      </div>
+        {ordersLoading ? (
+          <div
+            className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <span className="sr-only">Loading order tickets…</span>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-muted h-80 animate-pulse rounded-sm"
+              />
+            ))}
+          </div>
+        ) : orders?.length ? (
+          <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {orders.map((order) => (
+              <OrderCard
+                key={order.id}
+                id={order.id}
+                status={order.status}
+                totalAmount={order.grandtotal}
+                paidAt={order.paidAt}
+                createdAt={order.createdAt}
+                orderItems={order.orderItems}
+                isFinishOrder={
+                  isFinishOrder && order.id === finishOrderVariable.orderId
+                }
+                onFinishOrder={handleFinishOrder}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-card ring-border grid min-h-72 place-items-center rounded-sm p-8 text-center ring-1">
+            <div>
+              <ReceiptText
+                className="text-muted-foreground mx-auto size-7"
+                aria-hidden="true"
+              />
+              <h3 className="mt-4 text-lg font-bold">No order tickets found</h3>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Try another status or create a new order from the counter.
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
     </>
   );
 };

@@ -3,15 +3,24 @@ import type { ReactNode } from "react";
 export function CatalogTable({
   headers,
   children,
+  headerClassName = "md:grid-cols-[minmax(320px,1.5fr)_minmax(160px,.7fr)_96px]",
 }: {
   headers: string[];
   children: ReactNode;
+  headerClassName?: string;
 }) {
   return (
     <div className="bg-card ring-border overflow-hidden ring-1">
-      <div className="text-muted-foreground hidden grid-cols-[minmax(260px,1.5fr)_minmax(150px,.8fr)_minmax(130px,.6fr)_96px] items-center gap-4 px-5 py-3 text-sm md:grid">
+      <div
+        className={`text-muted-foreground hidden items-center gap-4 px-5 py-3 text-sm md:grid ${headerClassName}`}
+      >
         {headers.map((header, index) => (
-          <div key={header} className={index >= 2 ? "text-right" : ""}>
+          <div
+            key={header}
+            className={
+              index === 2 ? "pr-3 text-right" : index > 2 ? "text-right" : ""
+            }
+          >
             {header}
           </div>
         ))}
