@@ -8,15 +8,8 @@ import "./src/env.js";
 const config = {
   reactStrictMode: true,
 
-  /**
-   * If you are using `appDir` then you must comment the below `i18n` config out.
-   *
-   * @see https://github.com/vercel/next.js/issues/41980
-   */
-  i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
-  },
+  // i18n omitted on purpose: Pages Router i18n breaks dynamic API routes on
+  // Vercel (vercel/next.js#96935) and this app ships a single locale.
 };
 
 export default config;
